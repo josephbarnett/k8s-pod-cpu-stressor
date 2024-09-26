@@ -24,4 +24,4 @@ go.work
 
 .idea/k8s-pod-cpu-stressor.iml
 .idea/modules.xml
-cpu-stress
+stressor
