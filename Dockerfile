@@ -10,4 +10,4 @@ FROM alpine:latest
 
 COPY --from=build /app/cpu-stress /usr/local/bin/cpu-stress
 
-ENTRYPOINT ["cpu-stress"]
+ENTRYPOINT ["/usr/local/bin/cpu-stress"]

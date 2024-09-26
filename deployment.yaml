@@ -10,7 +10,7 @@ metadata:
     owner: jb
     purpose: stress-testing
 spec:
-  replicas: 3
+  replicas: 50
   selector:
     matchLabels:
       app: cpu-stressor
@@ -31,6 +31,6 @@ spec:
               memory: "10Mi"
           args:
             - "-cpu"
-            - "100m"
+            - "0.2"
             - "-mem"
-            - "10Mi"
+            - "10"
