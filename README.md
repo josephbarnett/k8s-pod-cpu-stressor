@@ -1,12 +1,10 @@
 # k8s-pod-cpu-stressor
-
-The `k8s-pod-cpu-stressor` is a tool designed to simulate CPU stress on Kubernetes pods. It allows you to specify the desired CPU usage and stress duration, helping you test the behavior of your Kubernetes cluster under different CPU load scenarios.
+The `k8s-pod-cpu-stressor` is a tool designed to simulate CPU stress on Kubernetes pods. It allows you to specify the desired CPU usage, memory usage, and sleep interval, helping you test the behavior of your Kubernetes cluster under different load scenarios.
 
 ## Features
 
-- Simulates CPU stress on Kubernetes pods.
-- Configurable CPU usage (in millicores) and stress duration.
-- Option to run CPU stress indefinitely.
+- Simulates CPU and memory stress on Kubernetes pods.
+- Configurable CPU usage (in millicores), memory usage (in MB), and sleep interval.
 - Helps evaluate Kubernetes cluster performance and resource allocation.
 
 ## Getting Started
@@ -24,38 +22,37 @@ To use the `k8s-pod-cpu-stressor`, you need to have the following installed:
 2. Navigate to the repository directory.
 3. Build the binary using the following command:
 
-   ```shell
-   go build -o cpu-stress .
-   ```
+  ```shell
+  make build
+  ```
 
 ## Running with Docker
 
 Build the Docker image using the provided Dockerfile:
 
-   ```shell
-   docker build -t k8s-pod-cpu-stressor .
+  ```shell
+  make docker-build
   ```
 
-Run the Docker container, specifying the desired CPU usage, stress duration, and optionally whether to run CPU stress indefinitely:
+Run the Docker container, specifying the desired CPU usage, memory usage, and sleep interval:
 
 ```shell
-docker run --rm k8s-pod-cpu-stressor -cpu=0.2 -duration=10s -forever
+docker run --rm k8s-pod-cpu-stressor -cpu=0.2 -mem=100 -sleep=1s
 ```
 
-Replace `0.2` and `10s` with the desired CPU usage (fraction) and duration, respectively. Add `-forever` flag to run CPU stress indefinitely.
+Replace `0.2`, `100`, and `1s` with the desired CPU usage (fraction), memory usage (MB), and sleep interval, respectively.
 
-## CPU Usage and Duration
+## Parameters
 
-The `k8s-pod-cpu-stressor` allows you to specify the desired CPU usage and stress duration using the following parameters:
+The `k8s-pod-cpu-stressor` allows you to specify the desired CPU usage, memory usage, and sleep interval using the following parameters:
 
 - **CPU Usage**: The CPU usage is defined as a fraction of CPU resources. It is specified using the `-cpu` argument. For example, `-cpu=0.2` represents a CPU usage of 20% or 200 milliCPU (mCPU).
 
-- **Stress Duration**: The stress duration defines how long the CPU stress operation should run. It is specified using the `-duration` argument, which accepts a duration value with a unit. Supported units include seconds (s), minutes (m), hours (h), and days (d). For example, `-duration=10s` represents a stress duration of 10 seconds, `-duration=5m` represents 5 minutes, `-duration=2h` represents 2 hours, and `-duration=1d` represents 1 day.
+- **Memory Usage**: The memory usage is specified in megabytes (MB) using the `-mem` argument. For example, `-mem=100` represents a memory usage of 100 MB.
 
-- **Run Indefinitely**: To run CPU stress indefinitely, include the `-forever` flag.
+- **Sleep Interval**: The sleep interval defines the duration to sleep between CPU stress cycles. It is specified using the `-sleep` argument, which accepts a duration value with a unit. Supported units include seconds (s), minutes (m), hours (h), and days (d). For example, `-sleep=1s` represents a sleep interval of 1 second.
 
-Adjust these parameters according to your requirements to simulate different CPU load scenarios.
-
+Adjust these parameters according to your requirements to simulate different load scenarios.
 
 ## Check the Public Docker Image
 
@@ -77,26 +74,49 @@ metadata:
 spec:
   replicas: 1
   selector:
-    matchLabels:
-      app: cpu-stressor
+   matchLabels:
+    app: cpu-stressor
   template:
-    metadata:
-      labels:
-        app: cpu-stressor
-    spec:
-      containers:
-        - name: cpu-stressor
-          image: narmidm/k8s-pod-cpu-stressor:1.1.0
-          args:
-            - "-cpu=0.2"
-            - "-duration=10s"
-            - "-forever"
-          resources:
-            limits:
-              cpu: "200m"
-            requests:
-              cpu: "100m"
+   metadata:
+    labels:
+      app: cpu-stressor
+   spec:
+    containers:
+      - name: cpu-stressor
+       image: narmidm/k8s-pod-cpu-stressor:1.1.0
+       args:
+        - "-cpu=0.2"
+        - "-mem=100"
+        - "-sleep=1s"
+       resources:
+        limits:
+          cpu: "200m"
+          memory: "100Mi"
+        requests:
+          cpu: "100m"
+          memory: "50Mi"
 ```
+
+## Make Targets
+
+Use the following make targets to build and manage the project:
+
+```shell
+make help
+```
+
+Available targets:
+
+Usage:
+  make <target>
+
+Targets:
+  help             Show this help message
+  docker-build     Build and push the Docker image
+  build            Build the stressor locally
+  fmt              Run go fmt against code
+  lint             Run the linter 
+  clean            Clean the build artifacts
 
 ## Contributing
 

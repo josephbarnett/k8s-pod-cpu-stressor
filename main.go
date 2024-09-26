@@ -1,18 +1,20 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
 	"os/signal"
 	"runtime"
+	"syscall"
 	"time"
 )
 
 func main() {
 	cpuUsagePtr := flag.Float64("cpu", 0.2, "CPU usage as a fraction (e.g., 0.2 for 200m)")
-	durationPtr := flag.Duration("duration", 10*time.Second, "Duration for the CPU stress (e.g., 10s)")
-	runForeverPtr := flag.Bool("forever", false, "Run CPU stress indefinitely")
+	sleepIntervalPtr := flag.Duration("sleep", 0, "Sleep interval between CPU stress cycles (e.g., 1s)")
+	memUsagePtr := flag.Int("mem", 0, "Memory usage in MB")
 	flag.Parse()
 
 	numCPU := runtime.NumCPU()
@@ -20,40 +22,45 @@ func main() {
 
 	numGoroutines := int(float64(numCPU) * (*cpuUsagePtr))
 
-	fmt.Printf("Starting CPU stress with %d goroutines...\n", numGoroutines)
+	fmt.Printf("Starting CPU and memory stress with %d goroutines...\n", numGoroutines)
 
-	done := make(chan struct{})
+	ctx, cancel := context.WithCancel(context.Background())
 
 	// Capture termination signals
 	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, os.Interrupt, os.Kill)
+	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
 
 	for i := 0; i < numGoroutines; i++ {
-		go func() {
+		go func(ctx context.Context) {
+			mem := make([]byte, *memUsagePtr*1024*1024) // Allocate memory
 			for {
 				select {
-				case <-done:
+				case <-ctx.Done():
 					return
 				default:
+					// Simulate CPU work
+					for j := 0; j < 1_000_000; j++ {
+					}
+					// Simulate memory usage
+					for k := range mem {
+						mem[k] = byte(k)
+					}
+					if *sleepIntervalPtr > 0 {
+						time.Sleep(*sleepIntervalPtr)
+					}
 				}
 			}
-		}()
+		}(ctx)
 	}
 
 	go func() {
 		// Wait for termination signal
 		<-quit
-		fmt.Println("Termination signal received. Stopping CPU stress...")
-		close(done)
+		fmt.Println("Termination signal received. Stopping CPU and memory stress...")
+		cancel()
 	}()
 
-	if !*runForeverPtr {
-		time.Sleep(*durationPtr)
-		fmt.Println("CPU stress completed.")
-		os.Exit(0)
-	}
-
 	// Run stress indefinitely
-	fmt.Println("CPU stress will run indefinitely. Press Ctrl+C to stop.")
-	select {}
+	fmt.Println("CPU and memory stress will run indefinitely. Press Ctrl+C to stop.")
+	<-ctx.Done()
 }

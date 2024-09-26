@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cpu-stressor-deployment
+  namespace: stress
+  labels:
+    app: cpu-stressor
+    team: cirrus
+    feature: testing
+    owner: jb
+    purpose: stress-testing
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: cpu-stressor
+  template:
+    metadata:
+      labels:
+        app: cpu-stressor
+    spec:
+      containers:
+        - name: cpu-stressor
+          image: ghcr.io/josephbarnett/stressor:latest
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "10Mi"
+            limits:
+              cpu: "100m"
+              memory: "10Mi"
+          args:
+            - "-cpu"
+            - "100m"
+            - "-mem"
+            - "10Mi"
